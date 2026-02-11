@@ -8,17 +8,27 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, 'uploads');
-    fs.ensureDirSync(uploadDir);
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
-  }
-});
+// Use memory storage in serverless environments, disk storage locally
+const isServerless = process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+let storage;
+if (isServerless) {
+  // Use memory storage for serverless
+  storage = multer.memoryStorage();
+} else {
+  // Use disk storage for local development
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(__dirname, 'uploads');
+      fs.ensureDirSync(uploadDir);
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueName = `${Date.now()}-${file.originalname}`;
+      cb(null, uniqueName);
+    }
+  });
+}
 
 const upload = multer({
   storage: storage,
@@ -44,6 +54,8 @@ app.get('/', (req, res) => {
 });
 
 app.post('/upload', upload.single('contract'), async (req, res) => {
+  let tempFilePath = null;
+  
   try {
     if (!req.file) {
       return res.status(400).json({ 
@@ -52,14 +64,28 @@ app.post('/upload', upload.single('contract'), async (req, res) => {
       });
     }
 
-    const filePath = req.file.path;
     const reader = new ContractReader();
+    let results;
 
-    // Process the contract
-    const results = await reader.processContract(filePath);
+    if (req.file.buffer) {
+      // Memory storage (serverless) - create temporary file
+      const tmpDir = process.env.VERCEL ? '/tmp' : require('os').tmpdir();
+      await fs.ensureDir(tmpDir);
+      tempFilePath = path.join(tmpDir, `${Date.now()}-${req.file.originalname}`);
+      await fs.writeFile(tempFilePath, req.file.buffer);
+      results = await reader.processContract(tempFilePath);
+    } else {
+      // Disk storage (local) - use existing file path
+      results = await reader.processContract(req.file.path);
+    }
 
-    // Clean up uploaded file
-    await fs.remove(filePath);
+    // Clean up files
+    if (tempFilePath) {
+      await fs.remove(tempFilePath).catch(console.error);
+    }
+    if (req.file.path) {
+      await fs.remove(req.file.path).catch(console.error);
+    }
 
     // Return results
     res.json({
@@ -71,7 +97,10 @@ app.post('/upload', upload.single('contract'), async (req, res) => {
   } catch (error) {
     console.error('Processing error:', error);
     
-    // Clean up uploaded file on error
+    // Clean up files on error
+    if (tempFilePath) {
+      await fs.remove(tempFilePath).catch(console.error);
+    }
     if (req.file && req.file.path) {
       await fs.remove(req.file.path).catch(console.error);
     }
