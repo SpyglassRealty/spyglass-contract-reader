@@ -22,6 +22,127 @@ class ContractReader {
   }
 
   /**
+   * Process contract PDF from buffer (for serverless environments)
+   * @param {Buffer} buffer - PDF file buffer
+   * @param {string} fileName - Original filename
+   * @param {Object} options - Processing options
+   * @returns {Promise<Object>} Processing results
+   */
+  async processContractFromBuffer(buffer, fileName, options = {}) {
+    console.log(`📄 Processing contract from buffer: ${fileName}`);
+    console.log('⏳ Extracting text from PDF buffer...');
+
+    // Step 1: Extract text from PDF buffer
+    const extractionResult = await this.extractContractTextFromBuffer(buffer, fileName);
+    if (!extractionResult.success) {
+      throw new Error(`PDF extraction failed: ${extractionResult.error}`);
+    }
+
+    console.log(`✅ Extracted ${extractionResult.metadata.pages} pages, ${extractionResult.metadata.wordCount} words`);
+    
+    if (extractionResult.metadata.isLikelyTRECForm) {
+      console.log('🏠 Detected Texas TREC form');
+    }
+
+    console.log('🤖 Analyzing contract with AI...');
+
+    // Step 2: Analyze with AI
+    const analysisResult = await this.analyzer.analyzeContract(
+      extractionResult.text, 
+      extractionResult.metadata
+    );
+
+    if (!analysisResult.success) {
+      throw new Error(`AI analysis failed: ${analysisResult.error}`);
+    }
+
+    console.log('✅ Contract analysis complete');
+
+    // Step 3: Validate extracted data
+    const validation = this.analyzer.validateExtractedData(analysisResult.data);
+    console.log(`📊 Data completeness: ${validation.completeness_score.toFixed(1)}%`);
+
+    if (validation.missing_required.length > 0) {
+      console.log(`⚠️  Missing required fields: ${validation.missing_required.join(', ')}`);
+    }
+
+    // Step 4: Generate deadline timeline
+    const timeline = this.deadlineCalculator.generateDeadlineTimeline(analysisResult.data);
+    console.log(`📅 Generated timeline with ${timeline.length} deadlines`);
+
+    // Check for urgent deadlines
+    const urgentDeadlines = timeline.filter(d => !d.is_expired && d.days_remaining <= 2);
+    if (urgentDeadlines.length > 0) {
+      console.log(`🚨 ${urgentDeadlines.length} urgent deadline(s) within 2 days!`);
+    }
+
+    // Step 5: Format outputs
+    const outputs = this.formatter.formatAllOutputs(
+      analysisResult.data,
+      timeline,
+      analysisResult.metadata,
+      validation
+    );
+
+    return {
+      success: true,
+      contractData: analysisResult.data,
+      timeline: timeline,
+      validation: validation,
+      outputs: outputs,
+      metadata: {
+        ...analysisResult.metadata,
+        file_name: fileName,
+        processing_time: new Date().toISOString(),
+        processed_from_buffer: true
+      }
+    };
+  }
+
+  /**
+   * Extract text from PDF buffer
+   * @param {Buffer} buffer - PDF file buffer
+   * @param {string} fileName - Original filename
+   * @returns {Promise<Object>} Extraction result
+   */
+  async extractContractTextFromBuffer(buffer, fileName) {
+    const pdf = require('pdf-parse');
+    
+    try {
+      const data = await pdf(buffer);
+      
+      const text = data.text;
+      const pages = data.numpages;
+      const wordCount = text.split(/\s+/).filter(word => word.length > 0).length;
+      
+      // Check if this looks like a TREC form
+      const trecKeywords = ['TREC', 'Texas Real Estate Commission', 'Promulgated', 'Contract for Sale'];
+      const isLikelyTRECForm = trecKeywords.some(keyword => 
+        text.toUpperCase().includes(keyword.toUpperCase())
+      );
+
+      return {
+        success: true,
+        text: text,
+        metadata: {
+          pages: pages,
+          wordCount: wordCount,
+          isLikelyTRECForm: isLikelyTRECForm,
+          fileName: fileName,
+          fileSize: buffer.length
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to extract text from PDF buffer: ${error.message}`,
+        text: null,
+        metadata: { fileName: fileName, fileSize: buffer.length }
+      };
+    }
+  }
+
+  /**
    * Process a single contract PDF
    * @param {string} filePath - Path to PDF contract
    * @param {Object} options - Processing options

@@ -2,17 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "web/server.js",
+      "src": "web/serverless.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "web/server.js"
+      "dest": "web/serverless.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "web/serverless.js": {
+      "maxDuration": 30
+    }
   }
 }
