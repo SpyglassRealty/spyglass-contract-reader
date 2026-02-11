@@ -1,0 +1,190 @@
+{
+  "contract_data": {
+    "buyer_names": ["John Michael Smith", "Sarah Elizabeth Smith"],
+    "buyer_contact": {
+      "phone": "(512) 555-0123",
+      "email": "john.smith@email.com",
+      "address": "789 Current St, Austin, TX 78701"
+    },
+    "seller_names": ["Robert James Wilson", "Mary Ann Wilson"],
+    "seller_contact": {
+      "phone": "(512) 555-0456",
+      "email": "rwilson@email.com",
+      "address": null
+    },
+    "property_address": "1234 Oak Tree Lane, Austin, TX 78704",
+    "legal_description": "Lot 15, Block A, Oak Tree Estates, Travis County, Texas",
+    "sales_price": 450000,
+    "earnest_money": {
+      "amount": 5000,
+      "deposit_deadline": "3 business days after effective date",
+      "holder": "Austin Premier Title Company"
+    },
+    "option_period": {
+      "days": 10,
+      "fee": 200,
+      "deadline": "Within 3 business days after effective date",
+      "expiration_calculation": "10 calendar days after effective date"
+    },
+    "closing_date": "2024-03-15",
+    "possession_date": "2024-03-15",
+    "effective_date": "2024-02-01",
+    "title_company": {
+      "name": "Austin Premier Title Company",
+      "address": "567 Title Way, Austin, TX 78701",
+      "contact": "(512) 555-TITLE"
+    },
+    "financing": {
+      "type": "Third Party Financing - Conventional",
+      "loan_amount": 360000,
+      "down_payment": 90000,
+      "financing_deadline": "20 days after effective date",
+      "interest_rate": null,
+      "loan_term": 30
+    },
+    "listing_agent": {
+      "name": "Jennifer Rodriguez",
+      "license_number": "TX-123456",
+      "brokerage": "Spyglass Realty",
+      "phone": "(512) 555-0789",
+      "email": "jennifer@spyglassrealty.com"
+    },
+    "buyers_agent": {
+      "name": "Michael Thompson",
+      "license_number": "TX-789012",
+      "brokerage": "Austin Home Pros",
+      "phone": "(512) 555-0987",
+      "email": "mthompson@austinhomepros.com"
+    },
+    "property_details": {
+      "square_footage": "2,150",
+      "lot_size": "0.25 acres",
+      "year_built": "2018",
+      "bedrooms": "4",
+      "bathrooms": "3",
+      "property_type": "Single Family Detached"
+    },
+    "inclusions_exclusions": {
+      "included": "All appliances, ceiling fans, window treatments, built-in shelving",
+      "excluded": "Dining room chandelier, workshop tools in garage"
+    },
+    "special_provisions": "Seller to provide a one-year home warranty. Buyer to assume current pest control contract. Pool equipment to be serviced before closing.",
+    "addenda": [
+      "Third Party Financing Addendum",
+      "Seller's Disclosure of Property Condition", 
+      "HOA Information and Resale Certificate"
+    ],
+    "deadlines": [
+      {
+        "type": "option_period_expiration",
+        "date": "2024-02-11",
+        "description": "Option period expires at 5:00 PM"
+      },
+      {
+        "type": "financing_approval",
+        "date": "2024-02-21", 
+        "description": "Financing approval deadline"
+      },
+      {
+        "type": "title_commitment",
+        "date": "2024-02-21",
+        "description": "Title commitment and survey delivery"
+      }
+    ],
+    "contingencies": [
+      "Subject to buyer's financing approval",
+      "Subject to satisfactory property inspection",
+      "Subject to clear title and survey",
+      "Subject to HOA approval (if required)"
+    ],
+    "disclosures": [
+      "Seller's Disclosure of Property Condition",
+      "Lead Paint Disclosure (not applicable - built after 1978)",
+      "HOA Information and Resale Certificate"
+    ],
+    "hoa_information": {
+      "hoa_required": true,
+      "hoa_fee": "125 monthly",
+      "hoa_documents_deadline": "3 business days after effective date"
+    },
+    "survey_requirements": "New survey required unless existing survey acceptable to title company",
+    "property_condition": "Property sold in present condition with specified repairs",
+    "missing_items": [
+      "Buyer signature on page 8",
+      "Initial on property condition addendum",
+      "HOA documents not yet provided"
+    ],
+    "form_type": "TREC 1-4 Family Residential Contract",
+    "form_version": "TREC NO. 20-15",
+    "unusual_terms": "Seller credit of $2,000 for buyer's closing costs. Extended possession clause allowing seller to remain 3 days past closing.",
+    "signature_status": {
+      "buyer_signed": true,
+      "seller_signed": true,
+      "all_parties_signed": false
+    },
+    "commission_details": {
+      "listing_commission": "3%",
+      "buyers_commission": "3%",
+      "commission_split": "Total 6% to be split equally between brokerages"
+    }
+  },
+  "timeline": [
+    {
+      "type": "earnest_money",
+      "date": "2024-02-05T17:00:00.000Z",
+      "description": "Earnest money deposit due ($5,000)",
+      "priority": "high",
+      "is_expired": true,
+      "days_remaining": -45
+    },
+    {
+      "type": "option_period",
+      "date": "2024-02-11T22:00:00.000Z", 
+      "description": "Option period expires (10 days)",
+      "priority": "critical",
+      "is_expired": true,
+      "days_remaining": -39
+    },
+    {
+      "type": "financing_approval",
+      "date": "2024-02-21T17:00:00.000Z",
+      "description": "Financing approval deadline",
+      "priority": "critical",
+      "is_expired": true,
+      "days_remaining": -29
+    },
+    {
+      "type": "final_walkthrough", 
+      "date": "2024-03-14T17:00:00.000Z",
+      "description": "Final walkthrough",
+      "priority": "medium",
+      "estimated": true,
+      "is_expired": false,
+      "days_remaining": 1
+    },
+    {
+      "type": "closing",
+      "date": "2024-03-15T17:00:00.000Z",
+      "description": "Scheduled closing date", 
+      "priority": "critical",
+      "is_expired": false,
+      "days_remaining": 2
+    }
+  ],
+  "metadata": {
+    "pages": 12,
+    "info": {},
+    "fileName": "sample_trec_contract.pdf",
+    "detectedForms": ["TREC", "Texas Real Estate Commission", "ONE TO FOUR FAMILY RESIDENTIAL CONTRACT"],
+    "isLikelyTRECForm": true,
+    "wordCount": 2847,
+    "characterCount": 15823,
+    "processed_at": "2024-03-13T15:30:45.123Z",
+    "model_used": "claude-3-sonnet-20240229",
+    "tokens_used": 3456,
+    "file_path": "/path/to/sample_trec_contract.pdf",
+    "file_name": "sample_trec_contract.pdf",
+    "processing_time": "2024-03-13T15:30:45.123Z"
+  },
+  "generated_at": "2024-03-13T15:30:45.123Z"
+}

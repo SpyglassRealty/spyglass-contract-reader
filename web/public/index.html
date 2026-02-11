@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spyglass Contract Reader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .logo p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            transition: background 0.3s ease;
+        }
+        
+        .upload-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .results h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .results pre {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .success {
+            background: #efe;
+            color: #363;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>📄 Contract Reader</h1>
+            <p>AI-powered Texas real estate contract analysis</p>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <p>Drag & drop your PDF contract here</p>
+            <p style="color: #888; font-size: 0.9rem; margin-top: 0.5rem;">or click to browse files</p>
+            <input type="file" id="fileInput" class="file-input" accept=".pdf">
+        </div>
+        
+        <button id="uploadBtn" class="upload-btn" disabled>Analyze Contract</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing contract with AI...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+        
+        <div class="results" id="results">
+            <h3>Analysis Results:</h3>
+            <pre id="resultData"></pre>
+        </div>
+    </div>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const success = document.getElementById('success');
+        const results = document.getElementById('results');
+        const resultData = document.getElementById('resultData');
+        
+        let selectedFile = null;
+        
+        // Click to browse
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // File selection
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files[0] && files[0].type === 'application/pdf') {
+                handleFile(files[0]);
+            } else {
+                showError('Please select a PDF file.');
+            }
+        });
+        
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        }
+        
+        function handleFile(file) {
+            selectedFile = file;
+            uploadArea.innerHTML = `
+                <div class="upload-icon">✅</div>
+                <p><strong>${file.name}</strong></p>
+                <p style="color: #888; font-size: 0.9rem;">Ready to analyze</p>
+            `;
+            uploadBtn.disabled = false;
+        }
+        
+        uploadBtn.addEventListener('click', uploadFile);
+        
+        async function uploadFile() {
+            if (!selectedFile) return;
+            
+            const formData = new FormData();
+            formData.append('contract', selectedFile);
+            
+            hideMessages();
+            loading.style.display = 'block';
+            uploadBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Successfully analyzed ${data.fileName}`);
+                    showResults(data.results);
+                } else {
+                    showError(data.error || 'Analysis failed');
+                }
+            } catch (err) {
+                showError('Network error: ' + err.message);
+            }
+            
+            loading.style.display = 'none';
+            uploadBtn.disabled = false;
+        }
+        
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+        
+        function showSuccess(message) {
+            success.textContent = message;
+            success.style.display = 'block';
+        }
+        
+        function showResults(data) {
+            resultData.textContent = JSON.stringify(data, null, 2);
+            results.style.display = 'block';
+        }
+        
+        function hideMessages() {
+            error.style.display = 'none';
+            success.style.display = 'none';
+            results.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
